@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghost Exile Evidence Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Caveat', cursive;
+        }
+        body {
+            background-image: url('https://i.imgur.com/sW6dz0O.jpeg');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .notebook {
+            background-image: url('https://i.imgur.com/pi1RfIE.png');
+            background-size: cover;
+            width: 800px;
+            height: 600px;
+            display: flex;
+            padding: 40px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .page {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            font-size: 18px;
+        }
+        .page:first-child {
+            padding-right: 40px;
+        }
+        .page:last-child {
+            padding-left: 40px;
+        }
+        h2 {
+            margin-top: 0;
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .evidence-list, .ghost-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .evidence-item, .ghost-item {
+            margin-bottom: 10px;
+        }
+        .ghost-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .ghost-item {
+            font-size: 16px;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        label {
+            cursor: pointer;
+        }
+        .language-switch {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .language-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .language-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .ghost-item.possible {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .ghost-item.impossible {
+            text-decoration: line-through;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="notebook">
+        <div class="language-switch">
+            <button class="language-btn" onclick="switchLanguage('ru')">🇷🇺 RU</button>
+            <button class="language-btn" onclick="switchLanguage('en')">🇬🇧 EN</button>
+        </div>
+        <div class="page">
+            <h2 id="evidenceTitle">Evidence</h2>
+            <ul class="evidence-list" id="evidenceList"></ul>
+        </div>
+        <div class="page">
+            <h2 id="ghostsTitle">Types of Ghosts</h2>
+            <div class="ghost-grid" id="ghostList"></div>
+        </div>
+    </div>
+
+    <script>
+        const ghostData = {
+            'Ревенант': ['Голос в диктофоне', 'Следы эктоплазмы', 'Огонек на камере'],
+            'Ширё': ['Лазерная проекция', 'Голос в диктофоне', 'Следы эктоплазмы'],
+            'Шинигами': ['РЕК 3', 'Радиоприемник', 'Огонек на камере'],
+            'Полтергейст': ['Записи в блокноте', 'Отрицательная температура', 'Дымка'],
+            'Диббук': ['Голос в диктофоне', 'Инфракрасный датчик движения', 'Дымка'],
+            'Обакэ': ['Записи в блокноте', 'Инфракрасный датчик движения', 'Следы эктоплазмы'],
+            'Онрё': ['Записи в блокноте', 'Уровень ЭМП 5', 'Лазерная проекция'],
+            'Мононоке': ['Голос в диктофоне', 'Уровень ЭМП 5', 'Радиоприемник'],
+            'Кинег': ['Радиоприемник', 'Огонек на камере', 'Дымка'],
+            'Джинн': ['Записи в блокноте', 'Уровень ЭМП 5', 'Отрицательная температура'],
+            'Допплер': ['Дымка', 'Инфракрасный датчик движения', 'РЕК 3'],
+            'Мюлинг': ['Голос в диктофоне', 'Уровень ЭМП 5', 'Отрицательная температура'],
+            'Пиру': ['Отрицательная температура', 'Следы эктоплазмы', 'Огонек на камере'],
+            'Аманодзяку': ['Лазерная проекция', 'Отрицательная температура', 'Дымка'],
+            'Кидзё': ['Радиоприемник', 'Уровень ЭМП 5', 'Дымка'],
+            'Они': ['Радиоприемник', 'Инфракрасный датчик движения', 'РЕК 3'],
+            'Могвай': ['Голос в диктофоне', 'Лазерная проекция', 'Отрицательная температура'],
+            'Мара': ['Голос в диктофоне', 'Инфракрасный датчик движения', 'Следы эктоплазмы'],
+            'Пишачи': ['РЕК 3', 'Отрицательная температура', 'Огонек на камере'],
+            'Рэйки': ['Записи в блокноте', 'Лазерная проекция', 'Следы эктоплазмы'],
+            'Ронове': ['Радиоприемник', 'Голос в диктофоне', 'Следы эктоплазмы']
+        };
+
+        const translations = {
+            en: {
+                'evidenceTitle': 'Evidence',
+                'ghostsTitle': 'Types of Ghosts',
+                'evidence': {
+                    'Голос в диктофоне': 'Voice Recorder',
+                    'Следы эктоплазмы': 'Traces of Ectoplasm',
+                    'Огонек на камере': 'Ghost Orb',
+                    'Лазерная проекция': 'Laser Projection',
+                    'РЕК 3': 'REC 3',
+                    'Радиоприемник': 'Spirit Box',
+                    'Записи в блокноте': 'Ghost Writing',
+                    'Отрицательная температура': 'Freezing Temperatures',
+                    'Дымка': 'Haze',
+                    'Инфракрасный датчик движения': 'Infrared Motion Sensor',
+                    'Уровень ЭМП 5': 'EMF Level 5'
+                }
+            },
+            ru: {
+                'evidenceTitle': 'Доказательства',
+                'ghostsTitle': 'Типы призраков',
+                'evidence': {
+                    'Голос в диктофоне': 'Голос в диктофоне',
+                    'Следы эктоплазмы': 'Следы эктоплазмы',
+                    'Огонек на камере': 'Огонек на камере',
+                    'Лазерная проекция': 'Лазерная проекция',
+                    'РЕК 3': 'РЕК 3',
+                    'Радиоприемник': 'Радиоприемник',
+                    'Записи в блокноте': 'Записи в блокноте',
+                    'Отрицательная температура': 'Отрицательная температура',
+                    'Дымка': 'Дымка',
+                    'Инфракрасный датчик движения': 'Инфракрасный датчик движения',
+                    'Уровень ЭМП 5': 'Уровень ЭМП 5'
+                }
+            }
+        };
+
+        let currentLanguage = 'en';
+
+        const evidenceList = document.getElementById('evidenceList');
+        const ghostList = document.getElementById('ghostList');
+
+        function createEvidenceList() {
+            evidenceList.innerHTML = '';
+            Object.keys(translations.ru.evidence).forEach(item => {
+                const li = document.createElement('li');
+                li.classList.add('evidence-item');
+                li.innerHTML = `<input type="checkbox" id="${item}" onchange="updateGhosts()"><label for="${item}">${translations[currentLanguage].evidence[item]}</label>`;
+                evidenceList.appendChild(li);
+            });
+        }
+
+        function createGhostList() {
+            ghostList.innerHTML = '';
+            Object.keys(ghostData).forEach(ghost => {
+                const div = document.createElement('div');
+                div.classList.add('ghost-item');
+                div.textContent = ghost;
+                div.id = `ghost-${ghost}`;
+                ghostList.appendChild(div);
+            });
+        }
+
+        function updateGhosts() {
+            const selectedEvidence = Array.from(evidenceList.querySelectorAll('input:checked')).map(input => input.id);
+            
+            Object.entries(ghostData).forEach(([ghost, evidence]) => {
+                const ghostElement = document.getElementById(`ghost-${ghost}`);
+                if (selectedEvidence.every(e => evidence.includes(e)) && evidence.some(e => selectedEvidence.includes(e))) {
+                    ghostElement.classList.add('possible');
+                    ghostElement.classList.remove('impossible');
+                } else {
+                    ghostElement.classList.remove('possible');
+                    ghostElement.classList.add('impossible');
+                }
+            });
+        }
+
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            document.getElementById('evidenceTitle').textContent = translations[lang].evidenceTitle;
+            document.getElementById('ghostsTitle').textContent = translations[lang].ghostsTitle;
+            Array.from(evidenceList.querySelectorAll('label')).forEach(label => {
+                const evidenceKey = label.getAttribute('for');
+                label.textContent = translations[lang].evidence[evidenceKey];
+            });
+        }
+
+        createEvidenceList();
+        createGhostList();
+        updateGhosts();
+    </script>
+</body>
+</html>
